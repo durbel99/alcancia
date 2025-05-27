@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Alcancía Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #34C759;
+            --background: #F2F2F7;
+            --card-bg: #FFFFFF;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            height: 100vh;
+            height: -webkit-fill-available;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 375px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        img {
+            max-width: 70%;
+            height: auto;
+            margin: 10px auto 20px;
+            display: block;
+        }
+        
+        .total-saved {
+            font-size: 13px;
+            color: #8E8E93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .total-amount {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .progress-container {
+            margin-bottom: 24px;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #8E8E93;
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #E5E5EA;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .action-buttons {
+            position: absolute;
+            top: 15px;
+            width: calc(100% - 40px);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .edit-button, .add-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            border: 1px solid #D1D1D6;
+            color: var(--primary-color);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .movements {
+            margin-top: 16px;
+            max-height: 180px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .movements h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1C1C1E;
+        }
+        
+        .movements ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .movements li {
+            background-color: #F7F7F7;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .movement-amount {
+            font-weight: 600;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 300px;
+            padding: 20px;
+            animation: modalOpen 0.3s ease;
+        }
+        
+        @keyframes modalOpen {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .modal input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid #D1D1D6;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            -webkit-appearance: none;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #E5E5EA;
+            color: #000;
+        }
+        
+        /* iOS specific adjustments */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="action-buttons">
+            <button class="edit-button" onclick="openEditModal()">
+                <i class="fas fa-pen"></i>
+            </button>
+            <button class="add-button" onclick="openModal()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <img src="https://www.tesla.com/ownersmanual/images/GUID-B5641257-9E85-404B-9667-4DA5FDF6D2E7-online-en-US.png" alt="Alcancía" id="savingsImage">
+        
+        <div class="total-saved">Total Saved</div>
+        <div class="total-amount" id="totalAmount">$0 / $0</div>
+        
+        <div class="progress-container">
+            <div class="progress-text">
+                <span id="progressText">0%</span>
+                <span id="goalText">Meta: $0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="movements">
+            <h3>Últimos Movimientos</h3>
+            <ul id="lastMovements">
+                <li>No hay movimientos aún</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal para añadir/retirar -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2>Agregar Movimiento</h2>
+            <input type="number" id="amountInput" placeholder="Cantidad" pattern="[0-9]*" inputmode="numeric">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn-primary" onclick="handleAction('add')">Agregar</button>
+                <button class="btn-primary" onclick="handleAction('remove')">Retirar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar meta -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Editar Meta</h2>
+            <input type="number" id="goalInput" placeholder="Nueva meta de ahorro" pattern="[0-9]*" inputmode="numeric">
+            <input type="text" id="imageInput" placeholder="URL de imagen (opcional)">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn-primary" onclick="updateGoal()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos iniciales
+        let state = {
+            balance: 0,
+            goal: 0,
+            movements: [],
+            image: "https://www.tesla.com/ownersmanual/images/GUID-B5641257-9E85-404B-9667-4DA5FDF6D2E7-online-en-US.png"
+        };
+
+        // Cargar datos al iniciar
+        function loadData() {
+            const savedData = localStorage.getItem('savingsAppData');
+            if (savedData) {
+                state = JSON.parse(savedData);
+                updateUI();
+            }
+        }
+
+        // Guardar datos
+        function saveData() {
+            localStorage.setItem('savingsAppData', JSON.stringify(state));
+        }
+
+        // Actualizar interfaz
+        function updateUI() {
+            // Actualizar totales
+            document.getElementById('totalAmount').textContent = 
+                `$${formatNumber(state.balance)} / $${formatNumber(state.goal)}`;
+            
+            // Actualizar barra de progreso
+            const progress = state.goal > 0 ? (state.balance / state.goal) * 100 : 0;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${Math.round(progress)}%`;
+            document.getElementById('goalText').textContent = `Meta: $${formatNumber(state.goal)}`;
+            
+            // Actualizar imagen
+            document.getElementById('savingsImage').src = state.image;
+            
+            // Actualizar movimientos
+            const movementsList = document.getElementById('lastMovements');
+            movementsList.innerHTML = '';
+            
+            if (state.movements.length === 0) {
+                movementsList.innerHTML = '<li>No hay movimientos aún</li>';
+            } else {
+                state.movements.slice(0, 5).forEach(movement => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${movement.type === 'add' ? '➕' : '➖'} ${new Date(movement.date).toLocaleDateString()}</span>
+                        <span class="movement-amount">$${formatNumber(movement.amount)}</span>
+                    `;
+                    movementsList.appendChild(li);
+                });
+            }
+        }
+
+        // Formatear números con comas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Manejar acciones
+        function handleAction(action) {
+            const amountInput = document.getElementById('amountInput');
+            const amount = parseFloat(amountInput.value);
+            
+            if (isNaN(amount) {
+                alert("Por favor ingresa una cantidad válida");
+                return;
+            }
+            
+            if (action === 'remove' && amount > state.balance) {
+                alert("No puedes retirar más de lo que tienes");
+                return;
+            }
+            
+            // Actualizar balance
+            state.balance = action === 'add' ? state.balance + amount : state.balance - amount;
+            
+            // Agregar movimiento
+            state.movements.unshift({
+                type: action,
+                amount: amount,
+                date: new Date().toISOString()
+            });
+            
+            // Guardar y actualizar
+            saveData();
+            updateUI();
+            closeModal();
+            amountInput.value = '';
+        }
+
+        // Actualizar meta
+        function updateGoal() {
+            const goalInput = document.getElementById('goalInput');
+            const imageInput = document.getElementById('imageInput');
+            
+            state.goal = parseFloat(goalInput.value) || 0;
+            
+            if (imageInput.value) {
+                state.image = imageInput.value;
+            }
+            
+            saveData();
+            updateUI();
+            closeEditModal();
+            
+            // Limpiar inputs
+            goalInput.value = '';
+            imageInput.value = '';
+        }
+
+        // Funciones para modales
+        function openModal() {
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('amountInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'flex';
+            document.getElementById('goalInput').focus();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            // Configurar PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    }).catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+            
+            // Manejar gesto de pantalla completa en iOS
+            if (window.navigator.standalone) {
+                document.body.style.paddingTop = '20px';
+            }
+        });
+
+        // Evitar zoom con doble toque
+        document.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
